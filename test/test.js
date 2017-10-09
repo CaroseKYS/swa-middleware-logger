@@ -7,16 +7,23 @@ var rimraf = require('rimraf');
 var rewire = require('rewire');
 var muk = require('muk');
 var httpmock = require('node-mocks-http');
+var mkdirp = require('mkdirp');
 var sIndexPath = path.join(__dirname, '..', 'index.js');
 var logger;
 
 describe('swa-logger模块测试', function(){
   before(function () {
-    rmDir();
+    this.timeout(10000);
+    rmDir().then(() => {
+      done();
+    });
   });
 
-  after(function () {
-    rmDir();
+  after(function (done) {
+    this.timeout(10000);
+    rmDir().then(() => {
+      done();
+    });
   });
 
   describe('开发环境测试', function(){
@@ -27,17 +34,12 @@ describe('swa-logger模块测试', function(){
       delete process.env.NODE_ENV;
     }); 
 
-    after(function(){
-      rmDir();
-    });
-
     beforeEach(function(){
       req = httpmock.createRequest({url: '/'});
       res = httpmock.createResponse({
         eventEmitter: events.EventEmitter
       });
       req.headers = {};
-      rmDir();
       delete require.cache[sIndexPath];
       delete process.env.NODE_SWA_ROOT;
     });
@@ -61,6 +63,15 @@ describe('swa-logger模块测试', function(){
         logger = require('../index.js');
       });
     });
+
+    it('模拟创建文件夹失败场景', function(){
+      process.env.NODE_SWA_ROOT = path.join(__dirname, 'conf-6');
+      muk(mkdirp, 'sync', () => false);
+      should.doesNotThrow(function(){
+        logger = require('../index.js');
+      });
+      muk.restore();
+    });
   });
 
   describe('生产环境测试', function(){
@@ -72,7 +83,7 @@ describe('swa-logger模块测试', function(){
       process.env.NODE_ENV = 'production';
     });
     after(function(){
-      rmDir();
+      // rmDir();
     });
 
     beforeEach(function(){
@@ -87,7 +98,7 @@ describe('swa-logger模块测试', function(){
       req.body  = {'test1': 'value1'};
       req.connection = {};
 
-      rmDir();
+      // rmDir();
       delete require.cache[sIndexPath];
       delete process.env.NODE_SWA_ROOT;
     });
@@ -143,11 +154,27 @@ describe('swa-logger模块测试', function(){
 });
 
 function rmDir(){
-  rimraf(path.join(__dirname, '..', 'logs'), function(){});
-  rimraf(path.join(__dirname, 'logs'), function(){});
-  rimraf(path.join(__dirname, 'conf-1', 'logs'), function(){});
-  rimraf(path.join(__dirname, 'conf-2', 'logs'), function(){});
-  rimraf(path.join(__dirname, 'conf-3', 'logs'), function(){});
-  rimraf(path.join(__dirname, 'conf-4', 'logs'), function(){});
-  rimraf(path.join(__dirname, 'conf-5', 'logs'), function(){});
+  const logDirs = [
+                    path.join(__dirname, '..', 'logs'), 
+                    path.join(__dirname, 'logs'),
+                    path.join(__dirname, 'conf-1', 'logs'),
+                    path.join(__dirname, 'conf-2', 'logs'),
+                    path.join(__dirname, 'conf-3', 'logs'),
+                    path.join(__dirname, 'conf-4', 'logs'),
+                    path.join(__dirname, 'conf-5', 'logs'),
+                    path.join(__dirname, 'conf-6', 'logs'),
+                  ];
+
+  const promises = [];
+
+  delete require.cache[sIndexPath];
+
+  logDirs.forEach(path => {
+
+    promises.push(new Promise((resolve, reject) => {
+      rimraf(path, {emfileWait: 5000}, resolve);
+    }));
+  });
+
+  return Promise.all(promises);
 }

@@ -9,7 +9,6 @@ module.exports = {
      */
     'morgan-development': 'swa-dev-1',
     'morgan-production': 'swa-pro-1',
-    'morgan-under-production': true /*生产模式下是否记录请求日志*/,
     'morgan-immediate': false
   }
 }

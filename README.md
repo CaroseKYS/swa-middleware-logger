@@ -12,7 +12,6 @@
 
 ## 配置信息
 
-    /*配置开发和生产环境下的日志级别*/
     'swa-middleware-logger': {
       // 日志的存放目录，默认为/logs目录
       'logs-path': 'logs',
@@ -25,6 +24,6 @@
       'morgan-production': 'swa-pro-2',
       // morgan 的immediate配置
       'morgan-immediate': false,
-      // 生产模式下是否记录请求日志
-      'morgan-under-production': true
+      // 是否记录请求日志
+      'enabled': true
     }

@@ -55,7 +55,7 @@ function getLogger(){
   /*配置内容*/
   var loggerConf;
 
-  loggerConf = utils.getJsonProp('swa-middleware-logger') || {};
+  loggerConf = utils.getJsonProp(configFile, 'swa-middleware-logger') || {};
   
   /*获取设置缺省状态下的默认日志级别以及存放路径*/
   levelDev  = utils.getJsonProp(loggerConf, 'morgan-development') || 'dev';
